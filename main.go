@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"io"
 	"log"
 	"math"
 	"net/http"
@@ -89,7 +88,7 @@ func generatePlan(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(response)
 	} else {
-		io.WriteString(w, "HTTP method not supported")
+		http.Error(w, "method not supported", http.StatusMethodNotAllowed)
 	}
 }
 

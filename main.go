@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"math"
@@ -41,18 +40,13 @@ func generatePlan(w http.ResponseWriter, r *http.Request) {
 			log.Println("input json ummarshal error", err)
 		}
 
-		fmt.Println(payload.StartDate.Format("2006-01-02T15:04:05Z"))
-		fmt.Println(payload.Duration, payload.LoanAmount)
-
 		//calculate monthly payment
 		monthlyPayment, err := calculateMonthlyPay(payload.NominalRate, payload.LoanAmount, payload.Duration)
 		if err != nil {
 			log.Println("get monthly payment error", err)
-			http.Error(w, "calculation error", http.StatusInternalServerError)
+			http.Error(w, "input error", http.StatusBadRequest)
 			return
 		}
-
-		fmt.Println("monthly payment:", monthlyPayment)
 
 		outputSlice := make([]output, 0, payload.Duration)
 
@@ -100,14 +94,12 @@ func generatePlan(w http.ResponseWriter, r *http.Request) {
 }
 
 func calculateMonthlyPay(nominalRate float64, loanAmount float64, duration int) (float64, error) {
-	if duration <= 0 {
-		return .0, errors.New("invalid duration")
+	if duration <= 0 || loanAmount <= 0 {
+		return .0, errors.New("invalid input")
 	}
 
 	r := nominalRate / (12 * 100)
-	fmt.Println("r----", r)
 	numerator := r * loanAmount
 	denominator := 1 - math.Pow(1+r, float64(-duration))
-	fmt.Println("denominator----", denominator)
 	return math.Round(numerator/denominator*100) / 100, nil
 }
